@@ -45,7 +45,10 @@ def test_scan_endpoint():
     test_images = [
         ("img/coke1.jpg", b"dummy image 1 content"),
         ("img/coke2.jpg", b"dummy image 2 content"),
-        ("img/crysanthemum.jpg", b"dummy image 3 content")
+        ("img/crysanthemum.jpg", b"dummy image 3 content"),
+        ("img/milk.jpg", b"dummy image 4 content"),
+        ("img/nutella.jpeg", b"dummy image 5 content"),
+        ("img/ruffles.jpeg", b"dummy image 6 content")
     ]
     
     # Prepare files for upload

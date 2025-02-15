@@ -117,19 +117,19 @@ def check_product_matches_ingredient(product, ingredient):
     product_category = product["category"].lower() if product["category"] else ""
     ingredient = ingredient.lower().strip()
     # Basic exact match
-    if ingredient in product_name:
+    if product_name in ingredient or ingredient in product_name:
         return True
     
     # Check if product name or category contains the ingredient
     words = re.findall(r'\b\w+\b', product_name)
     for word in words:
-        if word in ingredient.split(" "):
+        if word in ingredient.split(" ") and len(word) > 3:
             return True
     
     if product_category:
         category_words = re.findall(r'\b\w+\b', product_category)
         for word in category_words:
-            if word in ingredient:
+            if word in ingredient and len(word) > 3:
                 return True
     
     return False
@@ -225,9 +225,7 @@ def scan_and_process():
         finally:
             if os.path.exists(image_path):
                 os.remove(image_path)
-    
-    print(products)
-                
+
     if not products and not errors:
         return jsonify({"error": "No valid products processed"}), 400
         
