@@ -5,8 +5,8 @@ from pathlib import Path
 import time
 
 # Test configuration
-BASE_URL = "http://localhost:5000"
-TEST_IMAGE_PATH = "img/coke1.jpg"
+BASE_URL = "http://localhost:8000"
+TEST_IMAGE_PATH = "img/coke2.jpg"
 TEST_SESSION_ID = str(uuid.uuid4())
 
 def test_server_connection():
@@ -84,7 +84,3 @@ if __name__ == "__main__":
     
     print("\n=== Testing /generate_recipe endpoint ===")
     recipe_response = test_generate_recipe_endpoint()
-    
-    # Clean up test image
-    if Path(TEST_IMAGE_PATH).exists():
-        Path(TEST_IMAGE_PATH).unlink()

@@ -12,7 +12,7 @@ app = Flask(__name__)
 # Database initialization
 def init_db():
     # Create products database
-    conn = sqlite3.connect('products.db')
+    conn = sqlite3.connect('backend/products.db')
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS scanned_products (
@@ -29,7 +29,7 @@ def init_db():
     conn.close()
     
     # Ensure recipe database connection works
-    recipe_conn = sqlite3.connect('recipe.db')
+    recipe_conn = sqlite3.connect('backend/recipes.db')
     recipe_conn.row_factory = sqlite3.Row
     recipe_conn.close()
 
@@ -83,7 +83,7 @@ def get_product_info(barcode):
         return None
 
 def save_product_to_db(product_info, session_id):
-    conn = sqlite3.connect('products.db')
+    conn = sqlite3.connect('backend/products.db')
     c = conn.cursor()
     c.execute('''
         INSERT INTO scanned_products 
@@ -126,7 +126,7 @@ def extract_main_ingredient(ingredient_text):
     return main_ingredient, is_common
 
 def get_session_ingredients(session_id):
-    conn = sqlite3.connect('products.db')
+    conn = sqlite3.connect('backend/products.db')
     c = conn.cursor()
     c.execute('SELECT ingredients FROM scanned_products WHERE session_id = ?', (session_id,))
     ingredients = c.fetchall()
@@ -198,7 +198,7 @@ def generate_recipe():
     ingredients = get_session_ingredients(session_id)
     
     # Connect to recipe database
-    recipe_conn = sqlite3.connect('recipe.db')
+    recipe_conn = sqlite3.connect('backend/recipes.db')
     recipe_conn.row_factory = sqlite3.Row
     cursor = recipe_conn.cursor()
     
@@ -225,4 +225,4 @@ def generate_recipe():
 
 if __name__ == "__main__":
     init_db()
-    app.run(port=5000, debug=True)
+    app.run(port=8000, debug=True)
