@@ -6,7 +6,7 @@ import time
 
 # Test configuration
 BASE_URL = "http://localhost:8000"
-TEST_IMAGE_PATH = "img/coke2.jpg"
+TEST_IMAGE_PATH = "img/coke1.jpg"
 TEST_SESSION_ID = str(uuid.uuid4())
 
 def test_server_connection():

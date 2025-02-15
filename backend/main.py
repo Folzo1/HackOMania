@@ -20,7 +20,6 @@ def init_db():
             barcode TEXT,
             product_name TEXT,
             category TEXT,
-            ingredients TEXT,
             scan_date TIMESTAMP,
             session_id TEXT
         )
@@ -70,12 +69,10 @@ def get_product_info(barcode):
             return None
             
         product = data["product"]
-        ingredients_text = product.get("ingredients_text", "")
             
         return {
             "product_name": product.get("product_name", "Unknown Product"),
             "category": product.get("categories", "Unknown Category"),
-            "ingredients": ingredients_text,
             "barcode": barcode
         }
     except Exception as e:
@@ -87,13 +84,12 @@ def save_product_to_db(product_info, session_id):
     c = conn.cursor()
     c.execute('''
         INSERT INTO scanned_products 
-        (barcode, product_name, category, ingredients, scan_date, session_id)
-        VALUES (?, ?, ?, ?, ?, ?)
+        (barcode, product_name, category, scan_date, session_id)
+        VALUES (?, ?, ?, ?, ?)
     ''', (
         product_info['barcode'],
         product_info['product_name'],
         product_info['category'],
-        product_info['ingredients'],
         datetime.now(),
         session_id
     ))
@@ -101,43 +97,38 @@ def save_product_to_db(product_info, session_id):
     conn.close()
 
 # Recipe matching functions
-def extract_main_ingredient(ingredient_text):
-    text = ingredient_text.lower()
-    text = re.sub(r'^\d+\/?\d*\s*', '', text)
-    text = re.sub(r'^\d+\-\d+\s*', '', text)
-    
-    # Common ingredients and measurements lists...
-    measurements = {'tablespoon', 'teaspoon', 'cup', 'ounce', 'oz', 'pound', 'lb',
-                   'gram', 'kg', 'ml', 'liter', 'pinch', 'dash'}
-    
-    descriptors = {'large', 'small', 'medium', 'fresh', 'dried', 'chopped', 'diced',
-                  'sliced', 'minced', 'coarse', 'fine', 'finely', 'coarsely',
-                  'ground', 'whole', 'freshly'}
-    
-    common_ingredients = {'salt', 'pepper', 'oil', 'water', 'butter', 'garlic', 'sugar',
-                         'flour', 'vinegar', 'sauce', 'spice', 'herb', 'seasoning'}
-    
-    words = text.split(',')[0].split()
-    words = [word for word in words if word not in measurements and word not in descriptors]
-    
-    main_ingredient = words[-1] if words else ''
-    is_common = main_ingredient in common_ingredients
-    
-    return main_ingredient, is_common
-
-def get_session_ingredients(session_id):
+def get_session_products(session_id):
     conn = sqlite3.connect('backend/products.db')
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute('SELECT ingredients FROM scanned_products WHERE session_id = ?', (session_id,))
-    ingredients = c.fetchall()
+    c.execute('SELECT product_name, category FROM scanned_products WHERE session_id = ?', (session_id,))
+    products = c.fetchall()
     conn.close()
     
-    # Combine all ingredients into a single list
-    all_ingredients = []
-    for ing_text in ingredients:
-        if ing_text[0]:  # if ingredients text is not empty
-            all_ingredients.extend([i.strip() for i in ing_text[0].split(',')])
-    return {ing: 1 for ing in all_ingredients if ing}
+    return [{"name": product['product_name'], "category": product['category']} for product in products]
+
+def check_product_matches_ingredient(product, ingredient):
+    # Normalize strings for comparison
+    product_name = product["name"].lower()
+    product_category = product["category"].lower() if product["category"] else ""
+    ingredient = ingredient.lower().strip()
+    # Basic exact match
+    if ingredient in product_name:
+        return True
+    
+    # Check if product name or category contains the ingredient
+    words = re.findall(r'\b\w+\b', product_name)
+    for word in words:
+        if word in ingredient.split(" "):
+            return True
+    
+    if product_category:
+        category_words = re.findall(r'\b\w+\b', product_category)
+        for word in category_words:
+            if word in ingredient:
+                return True
+    
+    return False
 
 def process_instructions_with_qwen(instructions):
     try:
@@ -195,7 +186,7 @@ def generate_recipe():
     if not session_id:
         return jsonify({"error": "No session ID provided"}), 400
         
-    ingredients = get_session_ingredients(session_id)
+    products = get_session_products(session_id)
     
     # Connect to recipe database
     recipe_conn = sqlite3.connect('backend/recipes.db')
@@ -208,16 +199,40 @@ def generate_recipe():
         
         matches = []
         for recipe in recipes:
-            # Compare ingredients and find matches
-            # Add recipe processing logic here
-            processed_instructions = process_instructions_with_qwen(recipe['Instructions'])
+            # Parse recipe ingredients
+            recipe_ingredients = []
+            if 'Ingredients' in recipe.keys():
+                ingredients_text = recipe['Ingredients']
+                if ingredients_text:
+                    recipe_ingredients = [ing.strip() for ing in ingredients_text.split(',')]
             
-            matches.append({
-                'recipe_id': recipe['id'],
-                'title': recipe['Title'],
-                'instructions': processed_instructions
-            })
+            # Check if any product matches any ingredient
+            matching_ingredients = 0
+            for ingredient in recipe_ingredients:
+                for product in products:
+                    if check_product_matches_ingredient(product, ingredient):
+                        matching_ingredients += 1
+                        break  # Move to next ingredient once a match is found
+            # Calculate match percentage
+            match_percentage = 0
+            if recipe_ingredients:
+                match_percentage = (matching_ingredients / len(recipe_ingredients)) * 100
+            
+            # Only include recipes with at least one matching ingredient
+            if matching_ingredients > 0:
+                processed_instructions = process_instructions_with_qwen(recipe['Instructions'])
+                
+                matches.append({
+                    'recipe_id': recipe['id'],
+                    'title': recipe['Title'],
+                    'instructions': processed_instructions,
+                    'matching_ingredients': matching_ingredients,
+                    'total_ingredients': len(recipe_ingredients),
+                    'match_percentage': round(match_percentage, 2)
+                })
         
+        # Sort matches by match percentage in descending order
+        matches.sort(key=lambda x: x['match_percentage'], reverse=True)
         return jsonify(matches)
         
     finally:
