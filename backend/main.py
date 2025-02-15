@@ -307,7 +307,7 @@ def generate_recipe():
                 response = requests.get(bing_search_url, headers=headers)
                 soup = BeautifulSoup(response.content, 'html.parser')
                 image_tags = soup.find_all('img', {'class': 'mimg'})
-                for img in image_tags:
+                for img in image_tags[1:]:
                     img_url = img.get('data-src') or img.get('src')
                     if img_url and img_url.startswith('http'):
                         return img_url
