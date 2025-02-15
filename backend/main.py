@@ -312,15 +312,6 @@ def generate_recipe():
                     if img_url and img_url.startswith('http'):
                         return img_url
                 return None
-
-            query = recipe['Title']
-            image_url = get_first_image_url(query)
-
-            if image_url:
-                print("First image URL:", image_url)
-            else:
-                print("No images found.")
-
             
             # Only include recipes with at least one matching ingredient
             if matching_ingredients > 0:
@@ -331,7 +322,6 @@ def generate_recipe():
                     'matching_ingredients': matching_ingredients,
                     'total_ingredients': len(recipe_ingredients),
                     'match_percentage': round(match_percentage, 2),
-                    'imageURL': image_url
                 })
         
         # Sort matches by match percentage in descending order
@@ -343,6 +333,13 @@ def generate_recipe():
                 matches[i]['instructions'], 
                 matches[i]['title']
             )
+            query = matches[i]['title']
+            image_url = get_first_image_url(query)
+            if image_url:
+                print("First image URL:", image_url)
+                matches[i]['imageURL'] = image_url
+            else:
+                print("No images found.")
         
         # Save matches to file
         log_file = save_matches_to_file(session_id, matches)
