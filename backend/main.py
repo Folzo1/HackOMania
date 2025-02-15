@@ -163,7 +163,7 @@ def check_product_matches_ingredient(product, ingredient):
     
     return len(meaningful_matches) > 0
 #edit this part
-def process_instructions_with_qwen(raw_instructions, recipe_title):
+def process_instructions_with_gemini(raw_instructions, recipe_title):
     """
     Uses the Google Gemini API to refine recipe instructions.
 
@@ -338,7 +338,7 @@ def generate_recipe():
 
         # Second pass: process instructions only for top 2 matches
         for i in range(min(2, len(matches))):
-            matches[i]['instructions'] = process_instructions_with_qwen(
+            matches[i]['instructions'] = process_instructions_with_gemini(
                 matches[i]['instructions'], 
                 matches[i]['title']
             )
