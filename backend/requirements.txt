@@ -4,5 +4,3 @@ pyzbar
 requests
 uuid
 pathlib
-sqlite3
-re
