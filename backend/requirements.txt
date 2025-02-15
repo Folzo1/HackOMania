@@ -1,6 +1,7 @@
 Flask
-opencv-python
+opencv-python-headless
 pyzbar
 requests
-uuid
-pathlib
+beautifulsoup4
+google-genai
+python-dotenv
