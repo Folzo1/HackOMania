@@ -25,7 +25,7 @@ struct ContentView: View {
                     
                 }
             
-            RecipeView()
+            SavedRecipesView()
                 .tabItem {
                     
                     Label("Recipes", systemImage: "list.clipboard")

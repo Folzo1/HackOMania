@@ -7,7 +7,10 @@ enum NetworkError: Error {
     case invalidResponse
 }
 
-struct RecipeMatch: Codable {
+struct RecipeMatch: Codable, Identifiable {
+    
+    var imageData: Data?
+    
     let recipeId: Int
     let title: String
     let instructions: String
@@ -15,6 +18,7 @@ struct RecipeMatch: Codable {
     let totalIngredients: Int
     let matchPercentage: Double
     let imageURL: String?
+    var id: Int { recipeId }
     
     enum CodingKeys: String, CodingKey {
         case recipeId = "recipe_id"
@@ -25,6 +29,7 @@ struct RecipeMatch: Codable {
         case matchPercentage = "match_percentage"
         case imageURL = "imageURL"
     }
+    
 }
 
 struct ScanResponse: Codable {
