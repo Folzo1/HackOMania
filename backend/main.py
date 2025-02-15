@@ -30,72 +30,34 @@ def get_data():
     
     return jsonify(filtered_data)
 
-'''
-Create a detailed and personalised meal plan based on the following information: 
 
-**User Profile:**
-- Age: [User's age]
-- Dietary preferences: [User's dietary preferences, e.g., vegetarian, vegan, omnivore, gluten-free, etc.]
-- Allergies or food sensitivities: [List any allergies or sensitivities, if applicable]
-- Other preferences: [List any other specific preferences such as low-carb, high-protein, quick meals, etc.]
+#SAMPLE DATA
 
-**Available Ingredients:**
-- Ingredient 1: [Ingredient Name] (Amount: [Amount available])
-- Ingredient 2: [Ingredient Name] (Amount: [Amount available])
-- Ingredient 3: [Ingredient Name] (Amount: [Amount available])
-- [Add more ingredients as needed]
+#ingredients map with key as ingredient and value as quantity (for weight, assume units)
+ingredients = {'chicken': 500, 'broccoli': 3, 'milk': 500, 'egg': 10, 'lettuce': 100, 'banana': 5}
+profile = 'busy entrepreneur'
+effort = 'low' #low, mid, high
+prompt = f'''Here is a list of the ingredients I have with its respective quantities: {ingredients}
+            I am a {profile} and want my effort level for preparing the food to be {effort}. 
+            Help me create a delicious recipe based on the abovementioned parameters.
+            DO NOT give any unnecessary replies (eg confirming my prompt). 
+            STRICTLY stick to the ingredients from the ingredients list.
+            Return the following, separated, in JSON format: Ingredients Used, Instructions.
+        '''
 
-**Desired Portion Sizes:**
-- Number of meals: [Number of meals the user wants to plan for, e.g., 7 days, 3 meals per day, etc.]
-- Serving size per meal: [Amount of food per meal, e.g., 1 cup, 2 servings, etc.]
-
-**Desired Effort Level:**
-- Low: [Minimal prep time, few ingredients, quick cooking process]
-- Medium: [Moderate prep and cooking time, a few steps]
-- High: [Complex recipes with more ingredients and prep time]
-
-The meal plan should cater to the user's specific preferences, available ingredients, desired portion sizes, and effort level. Make sure to:
-- Provide a variety of meal options (breakfast, lunch, and dinner) with clear, step-by-step recipes.
-- Suggest meal options that use available ingredients efficiently, and offer substitutions when needed if ingredients are insufficient.
-- Tailor the recipes according to the desired effort level (low, medium, high).
-- Ensure the plan is nutritionally balanced, considering the user's dietary restrictions and preferences.
-- Ensure each recipe is clear, concise, and easy to follow.
-
-End the response with a complete meal plan for the user, offering a variety of options and including the ingredients and cooking instructions for each meal.
-'''
-
-# Sample LLM response (meal plan)
-llm_response = {
-    "meal_plan": {
-        "breakfast": {
-            "name": "Scrambled Tofu with Veggies",
-            "ingredients": ["Tofu", "Spinach", "Tomatoes", "Olive oil", "Garlic", "Salt", "Pepper"],
-            "steps": [
-                "Heat olive oil in a pan and sauté garlic until fragrant.",
-                "Add chopped tomatoes and spinach, cook for 2 minutes.",
-                "Add crumbled tofu, salt, and pepper, and cook for another 5 minutes until tofu is golden brown."
-            ]
-        },
-        "lunch": {
-            "name": "Quinoa Salad with Roasted Vegetables",
-            "ingredients": ["Quinoa", "Carrots", "Zucchini", "Olive oil", "Lemon juice", "Salt", "Pepper"],
-            "steps": [
-                "Cook quinoa as per package instructions.",
-                "Roast chopped carrots and zucchini with olive oil, salt, and pepper for 20 minutes at 180°C.",
-                "Combine quinoa with roasted vegetables, drizzle with lemon juice, and serve."
-            ]
-        },
-        "dinner": {
-            "name": "Grilled Chicken with Sweet Potato and Broccoli",
-            "ingredients": ["Chicken breast", "Sweet potato", "Broccoli", "Olive oil", "Salt", "Pepper"],
-            "steps": [
-                "Grill the chicken breast until cooked through (about 6 minutes per side).",
-                "Roast sweet potato cubes with olive oil, salt, and pepper for 25 minutes at 200°C.",
-                "Steam broccoli for 5-7 minutes, then serve with the grilled chicken and roasted sweet potato."
-            ]
-        }
-    }
+llm_response = '''json
+{
+  "Ingredients Used": ["chicken", "broccoli", "milk", "egg"],
+  "Instructions": [
+    "Slice the chicken into bite-sized pieces.",
+    "Boil a large pot of water and add the chicken pieces. Cook for about 7 to 8 minutes or until fully cooked.",
+    "Wash and steam the broccoli florets for about 4-5 minutes until tender but still crisp.",
+    "In a saucepan, heat some water and add the milk. Beat the eggs in a bowl and slowly pour them into the milk while stirring constantly to avoid curdling. Add salt and pepper to taste. Simmer for about 5 minutes until the sauce thickens.",
+    "Combine the cooked chicken pieces, steamed broccoli, and simmered egg milk sauce in a serving bowl.",
+    "Mix everything together gently to ensure the flavors blend well."
+  ]
 }
+'''
 
 # Route to return the LLM response as a JSON
 @app.route('/recipes', methods=['POST'])
