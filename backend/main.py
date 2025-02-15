@@ -7,6 +7,7 @@ import re
 import os
 import json
 from datetime import datetime
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
@@ -297,6 +298,29 @@ def generate_recipe():
             match_percentage = 0
             if recipe_ingredients:
                 match_percentage = (matching_ingredients / len(recipe_ingredients)) * 100
+
+            #Add thumbnail image URL 
+            def get_first_image_url(query):
+                query = query.replace(" ", "+")
+                bing_search_url = f"https://www.bing.com/images/search?q={query}+filterui:imagesize-large"
+                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+                response = requests.get(bing_search_url, headers=headers)
+                soup = BeautifulSoup(response.content, 'html.parser')
+                image_tags = soup.find_all('img', {'class': 'mimg'})
+                for img in image_tags:
+                    img_url = img.get('data-src') or img.get('src')
+                    if img_url and img_url.startswith('http'):
+                        return img_url
+                return None
+
+            query = recipe['Title']
+            image_url = get_first_image_url(query)
+
+            if image_url:
+                print("First image URL:", image_url)
+            else:
+                print("No images found.")
+
             
             # Only include recipes with at least one matching ingredient
             if matching_ingredients > 0:
@@ -306,7 +330,8 @@ def generate_recipe():
                     'instructions': recipe['Instructions'],  # Original unprocessed instructions
                     'matching_ingredients': matching_ingredients,
                     'total_ingredients': len(recipe_ingredients),
-                    'match_percentage': round(match_percentage, 2)
+                    'match_percentage': round(match_percentage, 2),
+                    'imageURL': image_url
                 })
         
         # Sort matches by match percentage in descending order
