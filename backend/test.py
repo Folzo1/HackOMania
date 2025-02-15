@@ -6,7 +6,6 @@ import time
 
 # Test configuration
 BASE_URL = "http://localhost:8000"
-TEST_IMAGE_PATH = "img/coke1.jpg"
 TEST_SESSION_ID = str(uuid.uuid4())
 
 def test_server_connection():
@@ -42,20 +41,29 @@ def detailed_request_test(endpoint, method='POST', **kwargs):
 
 def test_scan_endpoint():
     """Test the /scan endpoint with detailed logging"""
-    if not Path(TEST_IMAGE_PATH).exists():
-        print(f"Creating dummy test image at {TEST_IMAGE_PATH}")
-        # Create a small dummy image file for testing
-        with open(TEST_IMAGE_PATH, 'wb') as f:
-            f.write(b'dummy image content')
+    # Create multiple dummy test images
+    test_images = [
+        ("img/coke1.jpg", b"dummy image 1 content"),
+        ("img/coke2.jpg", b"dummy image 2 content"),
+        ("img/crysanthemum.jpg", b"dummy image 3 content")
+    ]
     
-    files = {
-        'image': ('test_barcode.jpg', open(TEST_IMAGE_PATH, 'rb'), 'image/jpeg')
-    }
-    data = {
-        'session_id': TEST_SESSION_ID
-    }
+    # Prepare files for upload
+    files = []
+    for path, _ in test_images:
+        img_path = Path(path)
+        files.append(('images', (img_path.name, open(img_path, 'rb'), 'image/jpeg')))
     
-    return detailed_request_test('/scan', files=files, data=data)
+    data = {'session_id': TEST_SESSION_ID}
+    
+    # Make the request
+    response = detailed_request_test('/scan', files=files, data=data)
+    
+    # Close open file handles
+    for file_tuple in files:
+        file_tuple[1][1].close()
+    
+    return response
 
 def test_generate_recipe_endpoint():
     """Test the /generate_recipe endpoint with detailed logging"""

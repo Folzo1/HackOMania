@@ -182,36 +182,60 @@ def save_matches_to_file(session_id, matches):
 # API Endpoints
 @app.route('/scan', methods=['POST'])
 def scan_and_process():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image file provided"}), 400
+    if 'images' not in request.files:
+        return jsonify({"error": "No image files provided"}), 400
         
     session_id = request.form.get('session_id')
     if not session_id:
         return jsonify({"error": "No session ID provided"}), 400
         
-    image = request.files['image']
-    image_path = "temp_image.jpg"
-    image.save(image_path)
+    images = request.files.getlist('images')
+    products = []
+    errors = []
+
+    # Create temporary directory
+    temp_dir = 'temp_images'
+    os.makedirs(temp_dir, exist_ok=True)
+
+    for image in images:
+        if image.filename == '':
+            errors.append({"file": "No file selected", "error": "Empty filename"})
+            continue
+            
+        image_path = os.path.join(temp_dir, image.filename)
+        image.save(image_path)
     
-    try:
-        barcode_data, message = scan_barcode(image_path)
-        if not barcode_data:
-            return jsonify({"error": message}), 400
+        try:
+            barcode_data, message = scan_barcode(image_path)
+            if not barcode_data:
+                errors.append({"file": image.filename, "error": message})
+                continue
+                
+            product_info = get_product_info(barcode_data)
+            if not product_info:
+                errors.append({"file": image.filename, "error": "Product not found in database"})
+                continue
+                
+            save_product_to_db(product_info, session_id)
+            products.append(product_info)
             
-        product_info = get_product_info(barcode_data)
-        if not product_info:
-            return jsonify({"error": "Product not found in database"}), 404
+        except Exception as e:
+            errors.append({"file": image.filename, "error": f"Error processing image: {str(e)}"})
             
-        save_product_to_db(product_info, session_id)
+        finally:
+            if os.path.exists(image_path):
+                os.remove(image_path)
+    
+    print(products)
+                
+    if not products and not errors:
+        return jsonify({"error": "No valid products processed"}), 400
         
-        return jsonify({
-            "message": "Product scanned and saved successfully",
-            "product_info": product_info
-        })
-        
-    finally:
-        if os.path.exists(image_path):
-            os.remove(image_path)
+    return jsonify({
+        "message": "Processed images",
+        "products": products,
+        "errors": errors
+    })
 
 @app.route('/generate_recipe', methods=['POST'])
 def generate_recipe():
