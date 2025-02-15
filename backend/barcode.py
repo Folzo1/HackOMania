@@ -30,18 +30,17 @@ def get_prod_info(barcode):
         product_name = data["product"].get("product_name", "Unknown Product")
         category = data["product"].get("categories", "Unknown Category")
         
-        # Send the product info to main.py
         product_data = {
             "product_name": product_name,
             "category": category,
             "barcode": barcode
         }
-        
-        # Send POST request to main.py
+
         try:
+            # Send a POST request to the /add_product endpoint in test.py
             response = requests.post('http://localhost:5000/add_product', json=product_data)
             if response.status_code == 200:
-                print("Product info successfully sent to main.py")
+                print("Product info successfully sent to test.py")
             else:
                 print("Failed to send product info")
         except requests.exceptions.RequestException as e:
