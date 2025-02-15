@@ -1,3 +1,4 @@
+# combined into main.py, no longer have to be updated
 import cv2
 from pyzbar.pyzbar import decode
 import requests
