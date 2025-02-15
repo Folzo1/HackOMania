@@ -2,129 +2,145 @@ import SwiftUI
 import PhotosUI
 
 struct ScanView: View {
-    
     @State private var selectedImages: [PhotosPickerItem] = []
     @State private var selectedImageData: [Data] = []
-    
     @State private var isPhotosPickerPresented: Bool = false
-    @State private var isNewRecipeViewPresented: Bool = false
     @State private var isDocumentScannerPresented: Bool = false
-    
-    @State private var recipes: [RecipeDetail] = []
-    
-    @State var outputImage = OutputImage()
+    @State private var recipes: [RecipeMatch] = []
+    @State private var isLoading: Bool = false
+    @State private var errorMessage: String?
     
     var body: some View {
-        
         NavigationStack {
-            
-            Menu {
-                // by camera
-                Button {
-                    isDocumentScannerPresented = true
+            VStack {
+                Menu {
+                    Button {
+                        isDocumentScannerPresented = true
+                    } label: {
+                        Image(systemName: "camera.viewfinder")
+                        Text("Scan")
+                    }
+                    
+                    Button {
+                        isPhotosPickerPresented = true
+                    } label: {
+                        Image(systemName: "photo")
+                        Text("Photos")
+                    }
                 } label: {
-                    Image(systemName: "camera.viewfinder")
-                    Text("Scan")
-                }
-                // by photos
-                Button {
-                    print("Photo Picker")
-                    isPhotosPickerPresented = true
-                } label: {
-                    Image(systemName: "photo")
-                    Text("Photos")
-                }
-            } label: {
-                HStack {
-                    Image(systemName: "barcode.viewfinder")
-                    Text("Scan Barcode")
-                }
-                .bold()
-                .padding()
-                .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .padding()
-            
-            if !recipes.isEmpty {
-                
-                RecipeListView(recipeDetails: recipes)
+                    HStack {
+                        Image(systemName: "barcode.viewfinder")
+                        Text("Scan Barcode")
+                    }
+                    .bold()
                     .padding()
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding()
                 
-            }
-            
-        }
-        .navigationTitle("Find Recipes")
-        .photosPicker(isPresented: $isPhotosPickerPresented, selection: $selectedImages, maxSelectionCount: 10, matching: .images)
-        .onChange(of: selectedImages) { newItems in
-            Task {
-                var tempImageData: [Data] = []
-                
-                // Use a task group to load images concurrently
-                await withTaskGroup(of: Data?.self) { taskGroup in
-                    for newItem in newItems {
-                        taskGroup.addTask {
-                            // Load image data on a background thread
-                            return try? await newItem.loadTransferable(type: Data.self)
-                        }
-                    }
-                    
-                    // Collect results from the background tasks
-                    for await result in taskGroup {
-                        if let data = result {
-                            tempImageData.append(data)
-                        }
-                    }
+                if isLoading {
+                    ProgressView("Processing images...")
+                        .padding()
                 }
                 
-                // Update UI on the main thread
-                await MainActor.run {
-                    selectedImageData = tempImageData
-                    //outputImage.imgData = selectedImageData
-                    
-                    let newRecipe = RecipeDetail(
-                        dateReceived: Date(),
-                        recipe: Recipe(
-                            id: 13352,
-                            title: "Grape and Elderflower Gelée",
-                            instructions: "1. Prepare the Gelatin Mixture...",
-                            matchingIngredients: 1,
-                            totalIngredients: 6,
-                            matchPercentage: 16.67,
-                            image: "https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&webp=true&resize=600,545" // Replace with a valid image URL
-                        )
-                    )
-                    recipes.append(newRecipe)
-                    
+                if let error = errorMessage {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .padding()
+                }
+                
+                if !recipes.isEmpty {
+                    List(recipes, id: \.recipeId) { recipe in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(recipe.title)
+                                .font(.headline)
+                            
+                            if let imageURL = recipe.imageURL {
+                                AsyncImage(url: URL(string: imageURL)) { image in
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(height: 200)
+                                } placeholder: {
+                                    ProgressView()
+                                }
+                            }
+                            
+                            Text("Match: \(Int(recipe.matchPercentage))%")
+                                .font(.subheadline)
+                            
+                            Text("Instructions:")
+                                .font(.subheadline)
+                                .padding(.top, 4)
+                            
+                            Text(recipe.instructions)
+                                .font(.body)
+                        }
+                        .padding(.vertical)
+                    }
                 }
             }
-        }
-        .fullScreenCover(isPresented: $isDocumentScannerPresented) {
-            CameraView { images in
-                withAnimation(.easeInOut(duration: 0.5)) {
+            .navigationTitle("Find Recipes")
+            .photosPicker(isPresented: $isPhotosPickerPresented, selection: $selectedImages, maxSelectionCount: 10, matching: .images)
+            .onChange(of: selectedImages) { newItems in
+                Task {
+                    await processImages(newItems)
+                }
+            }
+            .fullScreenCover(isPresented: $isDocumentScannerPresented) {
+                CameraView { images in
                     isDocumentScannerPresented = false
-                    
-                    // Simulate fetching recipes (replace with actual API call)
-                    let newRecipe = RecipeDetail(
-                        dateReceived: Date(),
-                        recipe: Recipe(
-                            id: 13353,
-                            title: "Scanned Recipe",
-                            instructions: "1. Prepare the ingredients...",
-                            matchingIngredients: 3,
-                            totalIngredients: 8,
-                            matchPercentage: 37.5,
-                            image: "https://images.immediate.co.uk/production/volatile/sites/30/2020/08/chorizo-mozarella-gnocchi-bake-cropped-9ab73a3.jpg?quality=90&webp=true&resize=600,545" // Replace with a valid image URL
-                        )
-                    )
-                    recipes.append(newRecipe)
+                    Task {
+                        await processScannedImages(images)
+                    }
                 }
             }
         }
     }
+    
+    private func processImages(_ items: [PhotosPickerItem]) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            var imageDataArray: [Data] = []
+            
+            for item in items {
+                if let data = try? await item.loadTransferable(type: Data.self) {
+                    imageDataArray.append(data)
+                }
+            }
+            
+            let sessionId = UUID().uuidString
+            recipes = try await NetworkManager.shared.uploadImages(imageDataArray, sessionId: sessionId)
+        } catch {
+            errorMessage = "Error: \(error.localizedDescription)"
+        }
+        
+        isLoading = false
+    }
+    
+    private func processScannedImages(_ images: [UIImage]) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let imageDataArray = images.compactMap { image -> Data? in
+                return image.jpegData(compressionQuality: 0.8)
+            }
+            
+            let sessionId = UUID().uuidString
+            recipes = try await NetworkManager.shared.uploadImages(imageDataArray, sessionId: sessionId)
+        } catch {
+            errorMessage = "Error: \(error.localizedDescription)"
+        }
+        
+        isLoading = false
+    }
 }
-
 
 #Preview {
     ScanView()
 }
+
