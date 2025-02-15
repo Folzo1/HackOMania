@@ -1,10 +1,3 @@
-//
-//  ScanView.swift
-//  restaurant
-//
-//  Created by Christopher on 15/2/25.
-//
-
 import SwiftUI
 import PhotosUI
 
@@ -21,7 +14,7 @@ struct ScanView: View {
     
     var body: some View {
         
-        NavigationStack{
+        NavigationStack {
             
             Menu {
                 // by camera
@@ -31,17 +24,16 @@ struct ScanView: View {
                     Image(systemName: "camera.viewfinder")
                     Text("Scan")
                 }
-                //by photos
+                // by photos
                 Button {
                     print("Photo Picker")
                     isPhotosPickerPresented = true
-                    
                 } label: {
                     Image(systemName: "photo")
                     Text("Photos")
                 }
             } label: {
-                HStack() {
+                HStack {
                     Image(systemName: "barcode.viewfinder")
                     Text("Scan Barcode")
                 }
@@ -52,40 +44,54 @@ struct ScanView: View {
             .buttonStyle(.borderedProminent)
             .padding()
             
-            
-        }.navigationTitle("Find Recipes")
-            .photosPicker(isPresented: $isPhotosPickerPresented, selection: $selectedImages, maxSelectionCount: 10, matching: .images)
-            .onChange(of: selectedImages) { newItems in
-                Task {
-                    var tempImageData: [Data] = []
+        }
+        .navigationTitle("Find Recipes")
+        .photosPicker(isPresented: $isPhotosPickerPresented, selection: $selectedImages, maxSelectionCount: 10, matching: .images)
+        .onChange(of: selectedImages) { newItems in
+            Task {
+                var tempImageData: [Data] = []
+                
+                // Use a task group to load images concurrently
+                await withTaskGroup(of: Data?.self) { taskGroup in
                     for newItem in newItems {
-                        if let data = try? await newItem.loadTransferable(type: Data.self) {
+                        taskGroup.addTask {
+                            // Load image data on a background thread
+                            return try? await newItem.loadTransferable(type: Data.self)
+                        }
+                    }
+                    
+                    // Collect results from the background tasks
+                    for await result in taskGroup {
+                        if let data = result {
                             tempImageData.append(data)
                         }
                     }
+                }
+                
+                // Update UI on the main thread
+                await MainActor.run {
                     selectedImageData = tempImageData
                     outputImage.imgData = selectedImageData
                     isNewRecipeViewPresented = true
                 }
             }
-            .fullScreenCover(isPresented: $isNewRecipeViewPresented) {
-                NewRecipeView()
-            }
-            .fullScreenCover(isPresented: $isDocumentScannerPresented) {
-                CameraView() { images in
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        isDocumentScannerPresented = false
-                        isNewRecipeViewPresented = true
-                        
-                        //resize and downsize images
-                        outputImage.imgData = images.compactMap { $0.jpegData(compressionQuality: 0.5) }
-                    }
+        }
+        .fullScreenCover(isPresented: $isNewRecipeViewPresented) {
+            NewRecipeView()
+        }
+        .fullScreenCover(isPresented: $isDocumentScannerPresented) {
+            CameraView { images in
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    isDocumentScannerPresented = false
+                    isNewRecipeViewPresented = true
+                    
+                    // Resize and downsize images
+                    outputImage.imgData = images.compactMap { $0.jpegData(compressionQuality: 0.5) }
                 }
             }
+        }
     }
 }
-
-
 
 #Preview {
     ScanView()
