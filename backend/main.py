@@ -177,7 +177,7 @@ def process_instructions_with_gemini(raw_instructions, recipe_title):
     Be detailed and easy to follow. Start directly with the numbered steps.
     Do not include any introductory text, disclaimers, or phrases like "Here's the recipe" or "Here are the steps".
     Just provide the numbered steps, formatted for mobile app display.
-    DO NOT use Markdown formatting, make it in a human-readable format.
+    DO NOT ever use Markdown formatting, make it in a human-readable format.
 
     Raw instructions:
     {raw_instructions}
@@ -214,17 +214,19 @@ def save_matches_to_file(session_id, matches):
 @app.route('/scan', methods=['POST'])
 def scan_and_process():
     if 'images' not in request.files:
-        return jsonify({"error": "No image files provided"}), 400
-        
+        return jsonify({"error": "Missing required field: 'images'. Please upload image files."}), 400
+
     session_id = request.form.get('session_id')
     if not session_id:
-        return jsonify({"error": "No session ID provided"}), 400
-        
+        return jsonify({"error": "Missing required field: 'session_id'. Please provide a session ID."}), 400
+
     images = request.files.getlist('images')
+    if not images:
+        return jsonify({"error": "No image files provided. Ensure you are uploading images."}), 400
+
     products = []
     errors = []
 
-    # Create temporary directory
     temp_dir = 'temp_images'
     os.makedirs(temp_dir, exist_ok=True)
 
@@ -232,134 +234,108 @@ def scan_and_process():
         if image.filename == '':
             errors.append({"file": "No file selected", "error": "Empty filename"})
             continue
-            
+
         image_path = os.path.join(temp_dir, image.filename)
         image.save(image_path)
-    
+
         try:
             barcode_data, message = scan_barcode(image_path)
             if not barcode_data:
                 errors.append({"file": image.filename, "error": message})
                 continue
-                
+
             product_info = get_product_info(barcode_data)
             if not product_info:
                 errors.append({"file": image.filename, "error": "Product not found in database"})
                 continue
-                
+
             save_product_to_db(product_info, session_id)
             products.append(product_info)
-            
+
         except Exception as e:
             errors.append({"file": image.filename, "error": f"Error processing image: {str(e)}"})
-            
+
         finally:
             if os.path.exists(image_path):
                 os.remove(image_path)
 
     if not products and not errors:
         return jsonify({"error": "No valid products processed"}), 400
-        
+
     return jsonify({
         "message": "Processed images",
         "products": products,
         "errors": errors
     })
 
+
 @app.route('/generate_recipe', methods=['POST'])
 def generate_recipe():
     data = request.get_json()
-    session_id = data.get('session_id')
+    required_fields = ['session_id']
     
-    if not session_id:
-        return jsonify({"error": "No session ID provided"}), 400
-        
+    # Find missing fields
+    missing_fields = [field for field in required_fields if field not in data or not data[field]]
+
+    if missing_fields:
+        return jsonify({
+            "error": f"Missing required field(s): {', '.join(missing_fields)}. Please provide all necessary fields."
+        }), 400
+
+    session_id = data['session_id']
     products = get_session_products(session_id)
-    
-    # Connect to recipe database
+
+    if not products:
+        return jsonify({"error": "No products found for this session. Please scan products first."}), 400
+
     recipe_conn = sqlite3.connect('backend/recipes.db')
     recipe_conn.row_factory = sqlite3.Row
     cursor = recipe_conn.cursor()
-    
+
     try:
         cursor.execute('SELECT * FROM recipes')
         recipes = cursor.fetchall()
-        
-        # First pass: calculate matches and percentages without processing instructions
+
         matches = []
         for recipe in recipes:
-            # Parse recipe ingredients
             recipe_ingredients = []
             if 'Ingredients' in recipe.keys():
                 ingredients_text = recipe['Ingredients']
                 if ingredients_text:
                     recipe_ingredients = [ing.strip() for ing in ingredients_text.split(',')]
-            
-            # Check if any product matches any ingredient
-            matching_ingredients = 0
-            for ingredient in recipe_ingredients:
-                for product in products:
-                    if check_product_matches_ingredient(product, ingredient):
-                        matching_ingredients += 1
-                        break  # Move to next ingredient once a match is found
-            
-            # Calculate match percentage
-            match_percentage = 0
-            if recipe_ingredients:
-                match_percentage = (matching_ingredients / len(recipe_ingredients)) * 100
 
-            #Add thumbnail image URL 
-            def get_first_image_url(query):
-                query = query.replace(" ", "+")
-                bing_search_url = f"https://www.bing.com/images/search?q={query}+filterui:imagesize-large"
-                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-                response = requests.get(bing_search_url, headers=headers)
-                soup = BeautifulSoup(response.content, 'html.parser')
-                image_tags = soup.find_all('img', {'class': 'mimg'})
-                for img in image_tags[1:]:
-                    img_url = img.get('data-src') or img.get('src')
-                    if img_url and img_url.startswith('http'):
-                        return img_url
-                return None
-            
-            # Only include recipes with at least one matching ingredient
+            matching_ingredients = sum(
+                any(check_product_matches_ingredient(product, ingredient) for product in products)
+                for ingredient in recipe_ingredients
+            )
+
+            match_percentage = (matching_ingredients / len(recipe_ingredients) * 100) if recipe_ingredients else 0
+
             if matching_ingredients > 0:
                 matches.append({
                     'recipe_id': recipe['id'],
                     'title': recipe['Title'],
-                    'instructions': recipe['Instructions'],  # Original unprocessed instructions
+                    'instructions': recipe['Instructions'],
                     'matching_ingredients': matching_ingredients,
                     'total_ingredients': len(recipe_ingredients),
                     'match_percentage': round(match_percentage, 2),
                 })
-        
-        # Sort matches by match percentage in descending order
+
         matches = sorted(matches, key=lambda x: x['match_percentage'], reverse=True)[:2]
 
-        # Second pass: process instructions only for top 2 matches
-        for i in range(min(2, len(matches))):
-            matches[i]['instructions'] = process_instructions_with_gemini(
-                matches[i]['instructions'], 
-                matches[i]['title']
-            )
-            query = matches[i]['title']
-            image_url = get_first_image_url(query)
-            if image_url:
-                image_url = image_url.split('?')[0]
-                print("First image URL:", image_url)
-                matches[i]['imageURL'] = image_url
-            else:
-                print("No images found.")
-        
-        # Save matches to file
+        for i in range(len(matches)):
+            matches[i]['instructions'] = process_instructions_with_gemini(matches[i]['instructions'], matches[i]['title'])
+
+        if not matches:
+            return jsonify({"error": "No matching recipes found. Try scanning more relevant products."}), 404
+
         log_file = save_matches_to_file(session_id, matches)
-        
-        print(f"Saved {len(matches)} matches to {log_file}")
+
         return jsonify({
             "matches": matches,
             "log_file": log_file
         })
-        
+
     finally:
         recipe_conn.close()
 
