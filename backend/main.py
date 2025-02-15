@@ -8,6 +8,13 @@ import os
 import json
 from datetime import datetime
 from bs4 import BeautifulSoup
+import google.generativeai as genai
+from google import genai
+from dotenv import load_dotenv
+
+load_dotenv()
+API_KEY = os.getenv('GOOGLE_API_KEY')
+client = genai.Client(api_key=API_KEY)
 
 app = Flask(__name__)
 
@@ -155,10 +162,10 @@ def check_product_matches_ingredient(product, ingredient):
                         if word in product_words and len(word) > 2]
     
     return len(meaningful_matches) > 0
-
+#edit this part
 def process_instructions_with_qwen(raw_instructions, recipe_title):
     """
-    Uses the locally running Qwen model via Ollama to refine recipe instructions.
+    Uses the Google Gemini API to refine recipe instructions.
 
     :param raw_instructions: The unstructured recipe instructions from the database.
     :param recipe_title: The title of the recipe for context.
@@ -167,29 +174,31 @@ def process_instructions_with_qwen(raw_instructions, recipe_title):
     prompt = f"""
     You are a helpful cooking assistant in a food app. 
     Format these instructions for "{recipe_title}" into a clear, numbered step-by-step guide.
-    Keep it concise and easy to follow. Start directly with the numbered steps.
+    Be detailed and easy to follow. Start directly with the numbered steps.
     Do not include any introductory text, disclaimers, or phrases like "Here's the recipe" or "Here are the steps".
     Just provide the numbered steps, formatted for mobile app display.
+    DO NOT use Markdown formatting, make it in a human-readable format.
 
     Raw instructions:
     {raw_instructions}
     """
 
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={"model": "qwen2.5", "prompt": prompt, "stream": False}  # Disable streaming
-    )
-
     try:
-        response_json = response.json()  # Convert response to JSON
-        response_text = response_json.get("response", "Error processing instructions.")
-        
+        # Request content generation using Google Gemini model
+        response = client.models.generate_content(
+            model="models/gemini-2.0-flash-lite-preview-02-05",  # Use the appropriate Gemini model
+            contents=prompt,
+        )
+
+        # Get the cleaned response text
+        response_text = response.text.strip()
+
         # Remove any common prefixes that the LLM might still add
         response_text = re.sub(r'^(Sure!|Here is|Here are|These are|Following are|Step-by-step guide:?)\s*', '', response_text, flags=re.IGNORECASE).strip()
-        
+
         return response_text
-    except requests.exceptions.JSONDecodeError as e:
-        return f"JSON parsing error: {e}, Response content: {response.text}"
+    except Exception as e:
+        return f"Error processing instructions with Gemini: {e}"
 
 # Save matches to a file
 def save_matches_to_file(session_id, matches):
