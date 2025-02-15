@@ -300,3 +300,4 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 
 logs*
+products.db

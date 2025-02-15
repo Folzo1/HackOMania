@@ -134,19 +134,23 @@ def check_product_matches_ingredient(product, ingredient):
     
     return False
 
-def process_instructions_with_qwen(raw_instructions):
+def process_instructions_with_qwen(raw_instructions, recipe_title):
     """
     Uses the locally running Qwen model via Ollama to refine recipe instructions.
 
     :param raw_instructions: The unstructured recipe instructions from the database.
+    :param recipe_title: The title of the recipe for context.
     :return: A cleaned, structured, and numbered list of steps.
     """
     prompt = f"""
-    Here are some unstructured recipe instructions:
-    {raw_instructions}
+    You are a helpful cooking assistant in a food app. 
+    Format these instructions for "{recipe_title}" into a clear, numbered step-by-step guide.
+    Keep it concise and easy to follow. Start directly with the numbered steps.
+    Do not include any introductory text, disclaimers, or phrases like "Here's the recipe" or "Here are the steps".
+    Just provide the numbered steps, formatted for mobile app display.
 
-    Format these instructions into a clear, numbered step-by-step guide.
-    Keep it concise, well-structured, and easy to follow.
+    Raw instructions:
+    {raw_instructions}
     """
 
     response = requests.post(
@@ -156,7 +160,12 @@ def process_instructions_with_qwen(raw_instructions):
 
     try:
         response_json = response.json()  # Convert response to JSON
-        return response_json.get("response", "Error processing instructions.")
+        response_text = response_json.get("response", "Error processing instructions.")
+        
+        # Remove any common prefixes that the LLM might still add
+        response_text = re.sub(r'^(Sure!|Here is|Here are|These are|Following are|Step-by-step guide:?)\s*', '', response_text, flags=re.IGNORECASE).strip()
+        
+        return response_text
     except requests.exceptions.JSONDecodeError as e:
         return f"JSON parsing error: {e}, Response content: {response.text}"
 
@@ -258,11 +267,14 @@ def generate_recipe():
                 })
         
         # Sort matches by match percentage in descending order
-        matches.sort(key=lambda x: x['match_percentage'], reverse=True)
-        
+        matches = sorted(matches, key=lambda x: x['match_percentage'], reverse=True)[:2]
+
         # Second pass: process instructions only for top 2 matches
         for i in range(min(2, len(matches))):
-            matches[i]['instructions'] = process_instructions_with_qwen(matches[i]['instructions'])
+            matches[i]['instructions'] = process_instructions_with_qwen(
+                matches[i]['instructions'], 
+                matches[i]['title']
+            )
         
         # Save matches to file
         log_file = save_matches_to_file(session_id, matches)
