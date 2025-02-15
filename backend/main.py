@@ -175,6 +175,7 @@ def process_instructions_with_qwen(raw_instructions, recipe_title):
     Format these instructions for "{recipe_title}" into a clear, numbered step-by-step guide.
     Be detailed and easy to follow. Start directly with the numbered steps.
     Do not include any introductory text, disclaimers, or phrases like "Here's the recipe" or "Here are the steps".
+    Remove any ending statements like "Enjoy".
     Just provide the numbered steps, formatted for mobile app display.
     DO NOT use Markdown formatting, make it in a human-readable format.
 
