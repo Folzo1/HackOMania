@@ -235,17 +235,16 @@ def scan_and_process():
         "errors": errors
     })
 
-@app.route('/generate_recipe', methods=['POST'])
-def generate_recipe():
+@app.route('/publish', methods=['POST'])
+def publish():
     data = request.get_json()
-    session_id = data.get('session_id')
     
+    session_id = data.get('session_id')
     if not session_id:
         return jsonify({"error": "No session ID provided"}), 400
-        
+
     products = get_session_products(session_id)
     
-    # Connect to recipe database
     recipe_conn = sqlite3.connect('backend/recipes.db')
     recipe_conn.row_factory = sqlite3.Row
     cursor = recipe_conn.cursor()
@@ -254,59 +253,83 @@ def generate_recipe():
         cursor.execute('SELECT * FROM recipes')
         recipes = cursor.fetchall()
         
-        # First pass: calculate matches and percentages without processing instructions
         matches = []
         for recipe in recipes:
-            # Parse recipe ingredients
             recipe_ingredients = []
             if 'Ingredients' in recipe.keys():
                 ingredients_text = recipe['Ingredients']
                 if ingredients_text:
                     recipe_ingredients = [ing.strip() for ing in ingredients_text.split(',')]
             
-            # Check if any product matches any ingredient
             matching_ingredients = 0
             for ingredient in recipe_ingredients:
                 for product in products:
                     if check_product_matches_ingredient(product, ingredient):
                         matching_ingredients += 1
-                        break  # Move to next ingredient once a match is found
+                        break
             
-            # Calculate match percentage
             match_percentage = 0
             if recipe_ingredients:
                 match_percentage = (matching_ingredients / len(recipe_ingredients)) * 100
             
-            # Only include recipes with at least one matching ingredient
             if matching_ingredients > 0:
                 matches.append({
                     'recipe_id': recipe['id'],
                     'title': recipe['Title'],
-                    'instructions': recipe['Instructions'],  # Original unprocessed instructions
+                    'instructions': recipe['Instructions'],
                     'matching_ingredients': matching_ingredients,
                     'total_ingredients': len(recipe_ingredients),
                     'match_percentage': round(match_percentage, 2)
                 })
         
-        # Sort matches by match percentage in descending order
         matches = sorted(matches, key=lambda x: x['match_percentage'], reverse=True)[:2]
-
-        # Second pass: process instructions only for top 2 matches
+        
         for i in range(min(2, len(matches))):
             matches[i]['instructions'] = process_instructions_with_qwen(
                 matches[i]['instructions'], 
                 matches[i]['title']
             )
         
-        # Save matches to file
-        log_file = save_matches_to_file(session_id, matches)
+        best_recipe = matches[0] if matches else None
+        if not best_recipe:
+            return jsonify({"error": "No matching recipe found"}), 400
         
-        print(f"Saved {len(matches)} matches to {log_file}")
+        recipe_name = best_recipe['title']
+        ingredients = [product['name'] for product in products]
+        instructions = best_recipe['instructions']
+        image_url = data.get('image_url')
+        
+        if not image_url:
+            return jsonify({"error": "Image URL is required"}), 400
+        
+        conn = sqlite3.connect('backend/published_recipes.db')
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS published_recipes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                ingredients TEXT,
+                instructions TEXT,
+                image_url TEXT
+            )
+        ''')
+        c.execute('''
+            INSERT INTO published_recipes (name, ingredients, instructions, image_url)
+            VALUES (?, ?, ?, ?)
+        ''', (recipe_name, json.dumps(ingredients), instructions, image_url))
+        conn.commit()
+        conn.close()
+
         return jsonify({
-            "matches": matches,
-            "log_file": log_file
-        })
-        
+            "message": "Recipe published successfully",
+            "recipe": {
+                "name": recipe_name,
+                "ingredients": ingredients,
+                "instructions": instructions,
+                "image_url": image_url
+            }
+        }), 201
+
     finally:
         recipe_conn.close()
 
