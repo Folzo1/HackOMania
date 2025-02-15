@@ -14,6 +14,12 @@
 		D96F73752D606A5800FC2CB8 /* restaurantTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F73742D606A5800FC2CB8 /* restaurantTests.swift */; };
 		D96F737F2D606A5800FC2CB8 /* restaurantUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F737E2D606A5800FC2CB8 /* restaurantUITests.swift */; };
 		D96F73812D606A5800FC2CB8 /* restaurantUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F73802D606A5800FC2CB8 /* restaurantUITestsLaunchTests.swift */; };
+		D96F738E2D607AD600FC2CB8 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F738D2D607AD600FC2CB8 /* HomeView.swift */; };
+		D96F73902D607AEB00FC2CB8 /* ScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F738F2D607AEB00FC2CB8 /* ScanView.swift */; };
+		D96F73922D607AF300FC2CB8 /* RecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F73912D607AF300FC2CB8 /* RecipeView.swift */; };
+		D96F73962D608E0D00FC2CB8 /* OutputImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F73952D608E0D00FC2CB8 /* OutputImage.swift */; };
+		D96F739B2D608F5400FC2CB8 /* NewRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F739A2D608F5400FC2CB8 /* NewRecipeView.swift */; };
+		D96F739D2D608FB100FC2CB8 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F739C2D608FB100FC2CB8 /* CameraView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +50,12 @@
 		D96F737A2D606A5800FC2CB8 /* restaurantUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = restaurantUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D96F737E2D606A5800FC2CB8 /* restaurantUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = restaurantUITests.swift; sourceTree = "<group>"; };
 		D96F73802D606A5800FC2CB8 /* restaurantUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = restaurantUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		D96F738D2D607AD600FC2CB8 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		D96F738F2D607AEB00FC2CB8 /* ScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanView.swift; sourceTree = "<group>"; };
+		D96F73912D607AF300FC2CB8 /* RecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeView.swift; sourceTree = "<group>"; };
+		D96F73952D608E0D00FC2CB8 /* OutputImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputImage.swift; sourceTree = "<group>"; };
+		D96F739A2D608F5400FC2CB8 /* NewRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewRecipeView.swift; sourceTree = "<group>"; };
+		D96F739C2D608FB100FC2CB8 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,7 +107,8 @@
 			isa = PBXGroup;
 			children = (
 				D96F73632D606A5600FC2CB8 /* restaurantApp.swift */,
-				D96F73652D606A5600FC2CB8 /* ContentView.swift */,
+				D96F73972D608E1900FC2CB8 /* Views */,
+				D96F73952D608E0D00FC2CB8 /* OutputImage.swift */,
 				D96F73672D606A5800FC2CB8 /* Assets.xcassets */,
 				D96F73692D606A5800FC2CB8 /* Preview Content */,
 			);
@@ -125,6 +138,19 @@
 				D96F73802D606A5800FC2CB8 /* restaurantUITestsLaunchTests.swift */,
 			);
 			path = restaurantUITests;
+			sourceTree = "<group>";
+		};
+		D96F73972D608E1900FC2CB8 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D96F73652D606A5600FC2CB8 /* ContentView.swift */,
+				D96F738D2D607AD600FC2CB8 /* HomeView.swift */,
+				D96F738F2D607AEB00FC2CB8 /* ScanView.swift */,
+				D96F739C2D608FB100FC2CB8 /* CameraView.swift */,
+				D96F73912D607AF300FC2CB8 /* RecipeView.swift */,
+				D96F739A2D608F5400FC2CB8 /* NewRecipeView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -257,8 +283,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D96F738E2D607AD600FC2CB8 /* HomeView.swift in Sources */,
+				D96F73902D607AEB00FC2CB8 /* ScanView.swift in Sources */,
 				D96F73662D606A5600FC2CB8 /* ContentView.swift in Sources */,
+				D96F739D2D608FB100FC2CB8 /* CameraView.swift in Sources */,
+				D96F739B2D608F5400FC2CB8 /* NewRecipeView.swift in Sources */,
+				D96F73962D608E0D00FC2CB8 /* OutputImage.swift in Sources */,
 				D96F73642D606A5600FC2CB8 /* restaurantApp.swift in Sources */,
+				D96F73922D607AF300FC2CB8 /* RecipeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -425,6 +457,8 @@
 				DEVELOPMENT_TEAM = 838T7KFF77;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Enable Camera";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Import Photos";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -454,6 +488,8 @@
 				DEVELOPMENT_TEAM = 838T7KFF77;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Enable Camera";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Import Photos";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
