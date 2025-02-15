@@ -111,28 +111,49 @@ def get_session_products(session_id):
     
     return [{"name": product['product_name'], "category": product['category']} for product in products]
 
+# Add this set at the top of the recipe matching functions section
+INGREDIENT_ADJECTIVES = {
+    'fresh', 'dried', 'frozen', 'canned', 'organic', 'chopped', 'minced',
+    'grated', 'sliced', 'ground', 'roasted', 'raw', 'cooked', 'smoked',
+    'sweet', 'sour', 'spicy', 'boneless', 'skinless', 'whole', 'low-fat',
+    'non-fat', 'extra-virgin', 'cold-pressed', 'pure', 'natural', 'artificial',
+    'light', 'dark', 'powdered', 'crushed', 'peeled', 'seeded', 'diced',
+    'shredded', 'cubed', 'marinated', 'pickled', 'aged', 'unsalted', 'salted',
+    'sweetened', 'unsweetened', 'flavored', 'unflavored', 'premium', 'homemade',
+    'store-bought', 'crispy', 'soft', 'hard', 'mild', 'hot', 'ripe', 'unripe',
+    'bitter', 'creamy', 'crunchy', 'juicy', 'lean', 'fatty', 'thick', 'thin',
+    'liquid', 'dry', 'moist', 'tender', 'tough', 'wild', 'cultivated', 'pasteurized',
+    'unpasteurized', 'gluten-free', 'vegan', 'vegetarian', 'kosher', 'halal'
+}
+
 def check_product_matches_ingredient(product, ingredient):
-    # Normalize strings for comparison
+    # Normalize and remove adjectives
+    ingredient = ingredient.lower().strip()
+    ingredient_words = re.findall(r'\b\w+\b', ingredient)
+    base_ingredient = ' '.join([word for word in ingredient_words 
+                              if word not in INGREDIENT_ADJECTIVES])
+    
+    if not base_ingredient:
+        return False
+    
     product_name = product["name"].lower()
     product_category = product["category"].lower() if product["category"] else ""
-    ingredient = ingredient.lower().strip()
-    # Basic exact match
-    if product_name in ingredient or ingredient in product_name:
+
+    # Check base matches
+    if (base_ingredient in product_name or 
+        product_name in base_ingredient or
+        base_ingredient in product_category):
         return True
     
-    # Check if product name or category contains the ingredient
-    words = re.findall(r'\b\w+\b', product_name)
-    for word in words:
-        if word in ingredient.split(" ") and len(word) > 3:
-            return True
+    # Check word components
+    base_words = set(re.findall(r'\b\w+\b', base_ingredient))
+    product_words = set(re.findall(r'\b\w+\b', f"{product_name} {product_category}"))
     
-    if product_category:
-        category_words = re.findall(r'\b\w+\b', product_category)
-        for word in category_words:
-            if word in ingredient and len(word) > 3:
-                return True
+    # Require at least 3-letter matches to avoid short word false positives
+    meaningful_matches = [word for word in base_words 
+                        if word in product_words and len(word) > 2]
     
-    return False
+    return len(meaningful_matches) > 0
 
 def process_instructions_with_qwen(raw_instructions, recipe_title):
     """
@@ -235,16 +256,17 @@ def scan_and_process():
         "errors": errors
     })
 
-@app.route('/publish', methods=['POST'])
-def publish():
+@app.route('/generate_recipe', methods=['POST'])
+def generate_recipe():
     data = request.get_json()
-    
     session_id = data.get('session_id')
+    
     if not session_id:
         return jsonify({"error": "No session ID provided"}), 400
-
+        
     products = get_session_products(session_id)
     
+    # Connect to recipe database
     recipe_conn = sqlite3.connect('backend/recipes.db')
     recipe_conn.row_factory = sqlite3.Row
     cursor = recipe_conn.cursor()
@@ -253,83 +275,59 @@ def publish():
         cursor.execute('SELECT * FROM recipes')
         recipes = cursor.fetchall()
         
+        # First pass: calculate matches and percentages without processing instructions
         matches = []
         for recipe in recipes:
+            # Parse recipe ingredients
             recipe_ingredients = []
             if 'Ingredients' in recipe.keys():
                 ingredients_text = recipe['Ingredients']
                 if ingredients_text:
                     recipe_ingredients = [ing.strip() for ing in ingredients_text.split(',')]
             
+            # Check if any product matches any ingredient
             matching_ingredients = 0
             for ingredient in recipe_ingredients:
                 for product in products:
                     if check_product_matches_ingredient(product, ingredient):
                         matching_ingredients += 1
-                        break
+                        break  # Move to next ingredient once a match is found
             
+            # Calculate match percentage
             match_percentage = 0
             if recipe_ingredients:
                 match_percentage = (matching_ingredients / len(recipe_ingredients)) * 100
             
+            # Only include recipes with at least one matching ingredient
             if matching_ingredients > 0:
                 matches.append({
                     'recipe_id': recipe['id'],
                     'title': recipe['Title'],
-                    'instructions': recipe['Instructions'],
+                    'instructions': recipe['Instructions'],  # Original unprocessed instructions
                     'matching_ingredients': matching_ingredients,
                     'total_ingredients': len(recipe_ingredients),
                     'match_percentage': round(match_percentage, 2)
                 })
         
+        # Sort matches by match percentage in descending order
         matches = sorted(matches, key=lambda x: x['match_percentage'], reverse=True)[:2]
-        
+
+        # Second pass: process instructions only for top 2 matches
         for i in range(min(2, len(matches))):
             matches[i]['instructions'] = process_instructions_with_qwen(
                 matches[i]['instructions'], 
                 matches[i]['title']
             )
         
-        best_recipe = matches[0] if matches else None
-        if not best_recipe:
-            return jsonify({"error": "No matching recipe found"}), 400
+        # Save matches to file
+        log_file = save_matches_to_file(session_id, matches)
         
-        recipe_name = best_recipe['title']
-        ingredients = [product['name'] for product in products]
-        instructions = best_recipe['instructions']
-        image_url = data.get('image_url')
-        
-        if not image_url:
-            return jsonify({"error": "Image URL is required"}), 400
-        
-        conn = sqlite3.connect('backend/published_recipes.db')
-        c = conn.cursor()
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS published_recipes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
-                ingredients TEXT,
-                instructions TEXT,
-                image_url TEXT
-            )
-        ''')
-        c.execute('''
-            INSERT INTO published_recipes (name, ingredients, instructions, image_url)
-            VALUES (?, ?, ?, ?)
-        ''', (recipe_name, json.dumps(ingredients), instructions, image_url))
-        conn.commit()
-        conn.close()
-
+        print(f"Saved {len(matches)} matches to {log_file}")
         return jsonify({
-            "message": "Recipe published successfully",
-            "recipe": {
-                "name": recipe_name,
-                "ingredients": ingredients,
-                "instructions": instructions,
-                "image_url": image_url
-            }
-        }), 201
-
+            "matches": matches,
+            "log_file": log_file
+        })
+        
     finally:
         recipe_conn.close()
 
