@@ -336,6 +336,7 @@ def generate_recipe():
             query = matches[i]['title']
             image_url = get_first_image_url(query)
             if image_url:
+                image_url = image_url.split('?')[0]
                 print("First image URL:", image_url)
                 matches[i]['imageURL'] = image_url
             else:
