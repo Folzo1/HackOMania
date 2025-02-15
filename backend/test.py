@@ -43,12 +43,11 @@ def test_scan_endpoint():
     """Test the /scan endpoint with detailed logging"""
     # Create multiple dummy test images
     test_images = [
-        ("img/coke1.jpg", b"dummy image 1 content"),
-        ("img/coke2.jpg", b"dummy image 2 content"),
         ("img/crysanthemum.jpg", b"dummy image 3 content"),
         ("img/milk.jpg", b"dummy image 4 content"),
         ("img/nutella.jpeg", b"dummy image 5 content"),
-        ("img/ruffles.jpeg", b"dummy image 6 content")
+        ("img/ruffles.jpeg", b"dummy image 6 content"),
+        ("img/chocolate.png", b"dummy image 7 content")
     ]
     
     # Prepare files for upload
