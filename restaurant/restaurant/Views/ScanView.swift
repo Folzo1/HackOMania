@@ -4,6 +4,8 @@ import PhotosUI
 struct ScanView: View {
     
     @State private var selectedImages: [PhotosPickerItem] = []
+    
+    // final images save to here
     @State private var selectedImageData: [Data] = []
     
     @State private var isPhotosPickerPresented: Bool = false
@@ -17,45 +19,48 @@ struct ScanView: View {
     var body: some View {
         
         NavigationStack {
-            
-            Menu {
-                // by camera
-                Button {
-                    isDocumentScannerPresented = true
+            VStack{
+                Menu {
+                    // by camera
+                    Button {
+                        isDocumentScannerPresented = true
+                    } label: {
+                        Image(systemName: "camera.viewfinder")
+                        Text("Scan")
+                    }
+                    // by photos
+                    Button {
+                        print("Photo Picker")
+                        isPhotosPickerPresented = true
+                    } label: {
+                        Image(systemName: "photo")
+                        Text("Photos")
+                    }
                 } label: {
-                    Image(systemName: "camera.viewfinder")
-                    Text("Scan")
-                }
-                // by photos
-                Button {
-                    print("Photo Picker")
-                    isPhotosPickerPresented = true
-                } label: {
-                    Image(systemName: "photo")
-                    Text("Photos")
-                }
-            } label: {
-                HStack {
-                    Image(systemName: "barcode.viewfinder")
-                    Text("Scan Barcode")
-                }
-                .bold()
-                .padding()
-                .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .padding()
-            
-            if !recipes.isEmpty {
-                
-                RecipeListView(recipeDetails: recipes)
+                    HStack {
+                        Image(systemName: "barcode.viewfinder")
+                        Text("Scan Barcode")
+                    }
+                    .bold()
                     .padding()
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .padding()
                 
-            }
-            
+                if !recipes.isEmpty {
+                    
+                    RecipeListView(recipeDetails: recipes)
+                        .padding()
+                    
+                }
+                
+                Spacer()
+                
+            }.navigationTitle("Find Recipes")
         }
-        .navigationTitle("Find Recipes")
         .photosPicker(isPresented: $isPhotosPickerPresented, selection: $selectedImages, maxSelectionCount: 10, matching: .images)
+
         .onChange(of: selectedImages) { newItems in
             Task {
                 var tempImageData: [Data] = []

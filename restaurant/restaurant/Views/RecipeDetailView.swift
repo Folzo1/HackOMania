@@ -13,7 +13,7 @@ struct RecipeDetailView: View {
     
     var body: some View {
         
-        VStack(alignment: .leading) {
+        HStack() {
             
             AsyncImage(url: URL(string: recipeDetail.recipe.image)) { phase in
                 
@@ -22,20 +22,18 @@ struct RecipeDetailView: View {
                 case .empty:
                     ProgressView()
                     
-                    
-                    
                 case .success(let image):
                     image
                         .resizable()
                         .scaledToFit()
-                        .frame(height: 100)
+                        .frame(width: 64, height: 48)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 
                 case .failure:
                     Image(systemName: "house")
                         .resizable()
                         .scaledToFit()
-                        .frame(height: 100)
+                        .frame(width: 64, height: 48)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 
                 @unknown default:
@@ -43,21 +41,20 @@ struct RecipeDetailView: View {
                     
                 }
             }
-            
-            Text(recipeDetail.recipe.title)
-                .font(.headline)
-                .lineLimit(1)
-            
-            // date showing
-            Text("Received: \(recipeDetail.dateReceived, formatter: dateFormatter) ")
-                .font(.subheadline)
-                .foregroundStyle(.gray)
-            
+            VStack(alignment: .leading){
+                Text(recipeDetail.recipe.title)
+                    .font(.headline)
+                
+                // date showing
+                Text("Received: \(recipeDetail.dateReceived, formatter: dateFormatter) ")
+                    .font(.subheadline)
+                    .foregroundStyle(.gray)
+            }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color(.blue))
+        .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .shadow(radius: 5)
         
     }
 }
