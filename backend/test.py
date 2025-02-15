@@ -3,6 +3,7 @@ import json
 import uuid
 from pathlib import Path
 import time
+start_time = time.time()
 
 # Test configuration
 BASE_URL = "http://localhost:8000"
@@ -43,11 +44,12 @@ def test_scan_endpoint():
     """Test the /scan endpoint with detailed logging"""
     # Create multiple dummy test images
     test_images = [
+        ("img/coke1.jpg", b"dummy image 1 content"),
+        ("img/coke2.jpg", b"dummy image 2 content"),
         ("img/crysanthemum.jpg", b"dummy image 3 content"),
         ("img/milk.jpg", b"dummy image 4 content"),
         ("img/nutella.jpeg", b"dummy image 5 content"),
-        ("img/ruffles.jpeg", b"dummy image 6 content"),
-        ("img/chocolate.png", b"dummy image 7 content")
+        ("img/ruffles.jpeg", b"dummy image 6 content")
     ]
     
     # Prepare files for upload
@@ -94,3 +96,7 @@ if __name__ == "__main__":
     
     print("\n=== Testing /generate_recipe endpoint ===")
     recipe_response = test_generate_recipe_endpoint()
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"The program took {elapsed_time:.5f} seconds to run.")
