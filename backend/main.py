@@ -139,21 +139,21 @@ def get_session_ingredients(session_id):
             all_ingredients.extend([i.strip() for i in ing_text[0].split(',')])
     return {ing: 1 for ing in all_ingredients if ing}
 
-def process_instructions_with_qwen(instructions):
-    try:
-        prompt = f"""
-        Make these cooking instructions more clear and presentable:
-        {instructions}
-        
-        Return the instructions as numbered steps.
-        """
-        # Add your Qwen LLM implementation here
-        processed_instructions = instructions  # Placeholder
-        return processed_instructions
-    except Exception as e:
-        return f"Error processing instructions: {str(e)}"
-
 # API Endpoints
+@app.route('/user_info', methods=['GET'])
+def get_user_info():
+    # Get the 'profile' and 'effort_level' parameters from the query string
+    profile = request.args.get('profile')
+    effort_level = request.args.get('effort_level')
+
+    # Check if both parameters are provided
+    if not profile or not effort_level:
+        return jsonify({"error": "Both 'profile' and 'effort_level' parameters are required"}), 400
+    
+    # You can now perform any logic with these parameters (for example, saving to the database, processing, etc.)
+    # For the sake of example, we just return them in the response
+    return profile, effort_level
+
 @app.route('/scan', methods=['POST'])
 def scan_and_process():
     if 'image' not in request.files:
@@ -222,6 +222,23 @@ def generate_recipe():
         
     finally:
         recipe_conn.close()
+
+def process_instructions_with_qwen(ingredients):
+    profile = get_user_info()[0]
+    effort_level = get_user_info()[1]
+    try:
+        prompt = f'''Here is a list of the ingredients I have with its respective quantities: {ingredients}
+            I am a {profile} and want my effort level for preparing the food to be {effort_level}. 
+            Help me create a delicious recipe based on the abovementioned parameters.
+            DO NOT give any unnecessary replies (eg confirming my prompt). 
+            STRICTLY stick to the ingredients from the ingredients list.
+            Return the following, separated, in JSON format: Ingredients Used, Instructions.
+        '''
+        # Add your Qwen LLM implementation here
+        processed_instructions = instructions  # Placeholder
+        return processed_instructions
+    except Exception as e:
+        return f"Error processing instructions: {str(e)}"
 
 if __name__ == "__main__":
     init_db()
