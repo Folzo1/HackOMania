@@ -26,6 +26,7 @@
 		D9E6A29D2D60C44F00901924 /* RecipeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E6A29C2D60C44F00901924 /* RecipeListView.swift */; };
 		D9E6A29F2D60C76F00901924 /* FullRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E6A29E2D60C76F00901924 /* FullRecipeView.swift */; };
 		D9E6A2A12D60CD4B00901924 /* RestaurantApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E6A2A02D60CD4B00901924 /* RestaurantApp.swift */; };
+		D9E6A2A32D60EC3C00901924 /* File.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9E6A2A22D60EC3C00901924 /* File.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +69,7 @@
 		D9E6A29C2D60C44F00901924 /* RecipeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeListView.swift; sourceTree = "<group>"; };
 		D9E6A29E2D60C76F00901924 /* FullRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullRecipeView.swift; sourceTree = "<group>"; };
 		D9E6A2A02D60CD4B00901924 /* RestaurantApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestaurantApp.swift; sourceTree = "<group>"; };
+		D9E6A2A22D60EC3C00901924 /* File.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = File.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,6 +132,7 @@
 				D9E6A2962D60BF5400901924 /* Recipe.swift */,
 				D9E6A2982D60C0F000901924 /* RecipeDetail.swift */,
 				D9E6A2A02D60CD4B00901924 /* RestaurantApp.swift */,
+				D9E6A2A22D60EC3C00901924 /* File.swift */,
 				D96F73972D608E1900FC2CB8 /* Views */,
 				D96F73952D608E0D00FC2CB8 /* OutputImage.swift */,
 				D96F73672D606A5800FC2CB8 /* Assets.xcassets */,
@@ -318,6 +321,7 @@
 				D9E6A29D2D60C44F00901924 /* RecipeListView.swift in Sources */,
 				D96F73962D608E0D00FC2CB8 /* OutputImage.swift in Sources */,
 				D9E6A29B2D60C14100901924 /* RecipeDetailView.swift in Sources */,
+				D9E6A2A32D60EC3C00901924 /* File.swift in Sources */,
 				D9E6A29F2D60C76F00901924 /* FullRecipeView.swift in Sources */,
 				8A5A56E72D60E87B008BF9BC /* NetworkManager.swift in Sources */,
 				D9E6A2972D60BF5500901924 /* Recipe.swift in Sources */,

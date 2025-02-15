@@ -36,7 +36,6 @@ struct FullRecipeView: View {
                             .scaledToFit()
                             .frame(height: 200)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
-                        let b = print("failed")
                             
                     
                     @unknown default:

@@ -3,6 +3,8 @@ import PhotosUI
 
 struct ScanView: View {
     @State private var selectedImages: [PhotosPickerItem] = []
+    
+    // final images save to here
     @State private var selectedImageData: [Data] = []
     @State private var isPhotosPickerPresented: Bool = false
     @State private var isDocumentScannerPresented: Bool = false
