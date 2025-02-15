@@ -8,7 +8,6 @@ import os
 import json
 from datetime import datetime
 from bs4 import BeautifulSoup
-import google.generativeai as genai
 from google import genai
 from dotenv import load_dotenv
 
@@ -334,10 +333,10 @@ def generate_recipe():
                 })
         
         # Sort matches by match percentage in descending order
-        matches = sorted(matches, key=lambda x: x['match_percentage'], reverse=True)[:2]
+        matches = sorted(matches, key=lambda x: x['match_percentage'], reverse=True)[:4]
 
         # Second pass: process instructions only for top 2 matches
-        for i in range(min(2, len(matches))):
+        for i in range(len(matches)):
             matches[i]['instructions'] = process_instructions_with_qwen(
                 matches[i]['instructions'], 
                 matches[i]['title']

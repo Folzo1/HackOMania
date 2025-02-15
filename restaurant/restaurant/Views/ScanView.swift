@@ -54,34 +54,23 @@ struct ScanView: View {
                 
                 if !recipes.isEmpty {
                     List(recipes, id: \.recipeId) { recipe in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(recipe.title)
-                                .font(.headline)
-                            
-                            if let imageURL = recipe.imageURL {
-                                AsyncImage(url: URL(string: imageURL)) { image in
-                                    image
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(height: 200)
-                                } placeholder: {
-                                    ProgressView()
-                                }
-                            }
-                            
-                            Text("Match: \(Int(recipe.matchPercentage))%")
-                                .font(.subheadline)
-                            
-                            Text("Instructions:")
-                                .font(.subheadline)
-                                .padding(.top, 4)
-                            
-                            Text(recipe.instructions)
-                                .font(.body)
+                        NavigationLink(destination: RecipeDetailView(recipe: recipe)) {
+                            RecipeCard(recipe: recipe)
+                                .frame(height: UIScreen.main.bounds.height / 2.5) // Better height calculation
+                                .padding(.vertical, 8)
                         }
-                        .padding(.vertical)
+                        .listRowBackground(Color.clear) // Clear default background
+                        .listRowSeparator(.hidden) // Hide separator
+                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0)) // Custom insets
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color(.systemBackground)) // Ensure proper background
                 }
+                
+                
+                Spacer()
+                
             }
             .navigationTitle("Find Recipes")
             .photosPicker(isPresented: $isPhotosPickerPresented, selection: $selectedImages, maxSelectionCount: 10, matching: .images)

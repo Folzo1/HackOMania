@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8A5A56E72D60E87B008BF9BC /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5A56E62D60E875008BF9BC /* NetworkManager.swift */; };
+		8A5A56E92D61183E008BF9BC /* RecipeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5A56E82D61183E008BF9BC /* RecipeCard.swift */; };
 		D96F73662D606A5600FC2CB8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F73652D606A5600FC2CB8 /* ContentView.swift */; };
 		D96F73682D606A5800FC2CB8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D96F73672D606A5800FC2CB8 /* Assets.xcassets */; };
 		D96F736B2D606A5800FC2CB8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D96F736A2D606A5800FC2CB8 /* Preview Assets.xcassets */; };
@@ -48,6 +49,7 @@
 
 /* Begin PBXFileReference section */
 		8A5A56E62D60E875008BF9BC /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
+		8A5A56E82D61183E008BF9BC /* RecipeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCard.swift; sourceTree = "<group>"; };
 		D96F73602D606A5600FC2CB8 /* restaurant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = restaurant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D96F73652D606A5600FC2CB8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D96F73672D606A5800FC2CB8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -172,6 +174,7 @@
 				D96F73652D606A5600FC2CB8 /* ContentView.swift */,
 				D96F738D2D607AD600FC2CB8 /* HomeView.swift */,
 				D96F738F2D607AEB00FC2CB8 /* ScanView.swift */,
+				8A5A56E82D61183E008BF9BC /* RecipeCard.swift */,
 				D96F739C2D608FB100FC2CB8 /* CameraView.swift */,
 				D96F73912D607AF300FC2CB8 /* RecipeView.swift */,
 				D96F739A2D608F5400FC2CB8 /* NewRecipeView.swift */,
@@ -325,6 +328,7 @@
 				D9E6A29F2D60C76F00901924 /* FullRecipeView.swift in Sources */,
 				8A5A56E72D60E87B008BF9BC /* NetworkManager.swift in Sources */,
 				D9E6A2972D60BF5500901924 /* Recipe.swift in Sources */,
+				8A5A56E92D61183E008BF9BC /* RecipeCard.swift in Sources */,
 				D9E6A2A12D60CD4B00901924 /* RestaurantApp.swift in Sources */,
 				D96F73922D607AF300FC2CB8 /* RecipeView.swift in Sources */,
 			);

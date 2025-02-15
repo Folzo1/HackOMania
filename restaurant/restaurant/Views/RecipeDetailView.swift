@@ -1,70 +1,63 @@
-//
-//  RecipeDetailView.swift
-//  restaurant
-//
-//  Created by Christopher on 15/2/25.
-//
 
 import SwiftUI
 
 struct RecipeDetailView: View {
-    
-    let recipeDetail: RecipeDetail
+    let recipe: RecipeMatch
     
     var body: some View {
-        
-        HStack() {
-            
-            AsyncImage(url: URL(string: recipeDetail.recipe.image)) { phase in
-                
-                switch phase {
-                    
-                case .empty:
-                    ProgressView()
-                    
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 64, height: 48)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                
-                case .failure:
-                    Image(systemName: "house")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 64, height: 48)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                
-                @unknown default:
-                    EmptyView()
-                    
+        ScrollView {
+            VStack(alignment: .leading, spacing: 15) {
+                if let imageURL = recipe.imageURL {
+                    AsyncImage(url: URL(string: imageURL)) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxWidth: .infinity, maxHeight: UIScreen.main.bounds.height / 4)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .padding(.horizontal)
+                        case .failure:
+                            Image(systemName: "photo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 200)
+                        default:
+                            ProgressView()
+                        }
+                    }
                 }
-            }
-            VStack(alignment: .leading){
-                Text(recipeDetail.recipe.title)
-                    .font(.headline)
                 
-                // date showing
-                Text("Received: \(recipeDetail.dateReceived, formatter: dateFormatter) ")
-                    .font(.subheadline)
-                    .foregroundStyle(.gray)
+                VStack(alignment: .leading, spacing: 16) {
+                    Text(recipe.title)
+                        .font(.largeTitle)
+                        .bold()
+                        .padding(.top)
+                    
+                    HStack {
+//                        Text("\(Int(recipe.matchPercentage))% Match")
+//                            .font(.title3)
+//                            .padding(.horizontal)
+//                            .padding(.vertical, 8)
+//                            .cornerRadius(8)
+                        
+                        Text("\(recipe.matchingIngredients)/\(recipe.totalIngredients) Ingredients")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Text("Instructions")
+                        .font(.title2)
+                        .bold()
+                        .padding(.top)
+                    
+                    Text(recipe.instructions)
+                        .font(.body)
+                }
+                .padding()
             }
         }
-        .padding()
-        .background(Color(.blue))
-        .frame(maxWidth: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        
+        .navigationTitle(recipe.title)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
-
-private let dateFormatter: DateFormatter = {
-    
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .short
-    return formatter
-    
-    
-}()
