@@ -5,6 +5,7 @@ import requests
 import sqlite3
 import re
 import os
+import json
 from datetime import datetime
 
 app = Flask(__name__)
@@ -31,6 +32,9 @@ def init_db():
     recipe_conn = sqlite3.connect('backend/recipes.db')
     recipe_conn.row_factory = sqlite3.Row
     recipe_conn.close()
+    
+    # Create logs directory if it doesn't exist
+    os.makedirs('backend/logs', exist_ok=True)
 
 # Barcode scanning functions
 def preprocess_image(image_path):
@@ -130,21 +134,43 @@ def check_product_matches_ingredient(product, ingredient):
     
     return False
 
-# API Endpoints
-@app.route('/user_info', methods=['GET'])
-def get_user_info():
-    # Get the 'profile' and 'effort_level' parameters from the query string
-    profile = request.args.get('profile')
-    effort_level = request.args.get('effort_level')
+def process_instructions_with_qwen(raw_instructions):
+    """
+    Uses the locally running Qwen model via Ollama to refine recipe instructions.
 
-    # Check if both parameters are provided
-    if not profile or not effort_level:
-        return jsonify({"error": "Both 'profile' and 'effort_level' parameters are required"}), 400
+    :param raw_instructions: The unstructured recipe instructions from the database.
+    :return: A cleaned, structured, and numbered list of steps.
+    """
+    prompt = f"""
+    Here are some unstructured recipe instructions:
+    {raw_instructions}
+
+    Format these instructions into a clear, numbered step-by-step guide.
+    Keep it concise, well-structured, and easy to follow.
+    """
+
+    response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={"model": "qwen2.5", "prompt": prompt, "stream": False}  # Disable streaming
+    )
+
+    try:
+        response_json = response.json()  # Convert response to JSON
+        return response_json.get("response", "Error processing instructions.")
+    except requests.exceptions.JSONDecodeError as e:
+        return f"JSON parsing error: {e}, Response content: {response.text}"
+
+# Save matches to a file
+def save_matches_to_file(session_id, matches):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"backend/logs/recipe_matches_{session_id}_{timestamp}.json"
     
-    # You can now perform any logic with these parameters (for example, saving to the database, processing, etc.)
-    # For the sake of example, we just return them in the response
-    return profile, effort_level
+    with open(filename, 'w') as f:
+        json.dump(matches, f, indent=2)
+    
+    return filename
 
+# API Endpoints
 @app.route('/scan', methods=['POST'])
 def scan_and_process():
     if 'image' not in request.files:
@@ -197,6 +223,7 @@ def generate_recipe():
         cursor.execute('SELECT * FROM recipes')
         recipes = cursor.fetchall()
         
+        # First pass: calculate matches and percentages without processing instructions
         matches = []
         for recipe in recipes:
             # Parse recipe ingredients
@@ -213,6 +240,7 @@ def generate_recipe():
                     if check_product_matches_ingredient(product, ingredient):
                         matching_ingredients += 1
                         break  # Move to next ingredient once a match is found
+            
             # Calculate match percentage
             match_percentage = 0
             if recipe_ingredients:
@@ -220,12 +248,10 @@ def generate_recipe():
             
             # Only include recipes with at least one matching ingredient
             if matching_ingredients > 0:
-                processed_instructions = process_instructions_with_qwen(recipe['Instructions'])
-                
                 matches.append({
                     'recipe_id': recipe['id'],
                     'title': recipe['Title'],
-                    'instructions': processed_instructions,
+                    'instructions': recipe['Instructions'],  # Original unprocessed instructions
                     'matching_ingredients': matching_ingredients,
                     'total_ingredients': len(recipe_ingredients),
                     'match_percentage': round(match_percentage, 2)
@@ -233,27 +259,22 @@ def generate_recipe():
         
         # Sort matches by match percentage in descending order
         matches.sort(key=lambda x: x['match_percentage'], reverse=True)
-        return jsonify(matches)
+        
+        # Second pass: process instructions only for top 2 matches
+        for i in range(min(2, len(matches))):
+            matches[i]['instructions'] = process_instructions_with_qwen(matches[i]['instructions'])
+        
+        # Save matches to file
+        log_file = save_matches_to_file(session_id, matches)
+        
+        print(f"Saved {len(matches)} matches to {log_file}")
+        return jsonify({
+            "matches": matches,
+            "log_file": log_file
+        })
         
     finally:
         recipe_conn.close()
-
-def process_instructions_with_qwen(ingredients):
-    profile = get_user_info()[0]
-    effort_level = get_user_info()[1]
-    try:
-        prompt = f'''Here is a list of the ingredients I have with its respective quantities: {ingredients}
-            I am a {profile} and want my effort level for preparing the food to be {effort_level}. 
-            Help me create a delicious recipe based on the abovementioned parameters.
-            DO NOT give any unnecessary replies (eg confirming my prompt). 
-            STRICTLY stick to the ingredients from the ingredients list.
-            Return the following, separated, in JSON format: Ingredients Used, Instructions.
-        '''
-        # Add your Qwen LLM implementation here
-        processed_instructions = instructions  # Placeholder
-        return processed_instructions
-    except Exception as e:
-        return f"Error processing instructions: {str(e)}"
 
 if __name__ == "__main__":
     init_db()
