@@ -14,6 +14,8 @@
 		8A5A56F02D612176008BF9BC /* RecipeDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5A56EF2D612176008BF9BC /* RecipeDataManager.swift */; };
 		8A5A56F22D612203008BF9BC /* SavedRecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5A56F12D612203008BF9BC /* SavedRecipesView.swift */; };
 		8A5A56F42D6124B3008BF9BC /* SavedRecipeExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5A56F32D6124B3008BF9BC /* SavedRecipeExtension.swift */; };
+		8A5A56FA2D616465008BF9BC /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5A56F92D616465008BF9BC /* GameView.swift */; };
+		8A5A56FC2D616481008BF9BC /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A5A56FB2D616481008BF9BC /* GameScene.swift */; };
 		D96F73662D606A5600FC2CB8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D96F73652D606A5600FC2CB8 /* ContentView.swift */; };
 		D96F73682D606A5800FC2CB8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D96F73672D606A5800FC2CB8 /* Assets.xcassets */; };
 		D96F736B2D606A5800FC2CB8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D96F736A2D606A5800FC2CB8 /* Preview Assets.xcassets */; };
@@ -60,6 +62,8 @@
 		8A5A56EF2D612176008BF9BC /* RecipeDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDataManager.swift; sourceTree = "<group>"; };
 		8A5A56F12D612203008BF9BC /* SavedRecipesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedRecipesView.swift; sourceTree = "<group>"; };
 		8A5A56F32D6124B3008BF9BC /* SavedRecipeExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedRecipeExtension.swift; sourceTree = "<group>"; };
+		8A5A56F92D616465008BF9BC /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		8A5A56FB2D616481008BF9BC /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		D96F73602D606A5600FC2CB8 /* restaurant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = restaurant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D96F73652D606A5600FC2CB8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		D96F73672D606A5800FC2CB8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -146,6 +150,8 @@
 				8A5A56F32D6124B3008BF9BC /* SavedRecipeExtension.swift */,
 				D9E6A2982D60C0F000901924 /* RecipeDetail.swift */,
 				D9E6A2A02D60CD4B00901924 /* RestaurantApp.swift */,
+				8A5A56F92D616465008BF9BC /* GameView.swift */,
+				8A5A56FB2D616481008BF9BC /* GameScene.swift */,
 				8A5A56ED2D612164008BF9BC /* Persistence.swift */,
 				D9E6A2A22D60EC3C00901924 /* File.swift */,
 				8A5A56EF2D612176008BF9BC /* RecipeDataManager.swift */,
@@ -341,11 +347,13 @@
 				D96F73962D608E0D00FC2CB8 /* OutputImage.swift in Sources */,
 				8A5A56EE2D612164008BF9BC /* Persistence.swift in Sources */,
 				8A5A56F42D6124B3008BF9BC /* SavedRecipeExtension.swift in Sources */,
+				8A5A56FA2D616465008BF9BC /* GameView.swift in Sources */,
 				D9E6A29B2D60C14100901924 /* RecipeDetailView.swift in Sources */,
 				D9E6A2A32D60EC3C00901924 /* File.swift in Sources */,
 				D9E6A29F2D60C76F00901924 /* FullRecipeView.swift in Sources */,
 				8A5A56E72D60E87B008BF9BC /* NetworkManager.swift in Sources */,
 				D9E6A2972D60BF5500901924 /* Recipe.swift in Sources */,
+				8A5A56FC2D616481008BF9BC /* GameScene.swift in Sources */,
 				8A5A56E92D61183E008BF9BC /* RecipeCard.swift in Sources */,
 				D9E6A2A12D60CD4B00901924 /* RestaurantApp.swift in Sources */,
 				D96F73922D607AF300FC2CB8 /* RecipeView.swift in Sources */,

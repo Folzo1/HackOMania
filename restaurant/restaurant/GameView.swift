@@ -1,18 +1,52 @@
-//
-//  GameView.swift
-//  restaurant
-//
-//  Created by Shao Yang Chai on 16/2/25.
-//
-
 import SwiftUI
+import SpriteKit
 
 struct GameView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+    @State private var showSavedRecipes = false
+    @State private var scene: GameScene
+    
+    init() {
+        let scene = GameScene()
+        scene.size = UIScreen.main.bounds.size
+        scene.scaleMode = .fill
+        self._scene = State(initialValue: scene)
     }
-}
-
-#Preview {
-    GameView()
+    
+    var body: some View {
+        ZStack {
+            VStack{
+                SpriteView(scene: scene)
+                    .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                    .ignoresSafeArea()
+                    .onAppear {
+                        scene.showSavedRecipes = { showSavedRecipes = true }
+                    }
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+                Spacer()
+          
+                
+            }
+        }
+        .sheet(isPresented: $showSavedRecipes, onDismiss: {
+            scene.resetCharacterPosition()
+        }) {
+            SavedRecipesView()
+        }
+    }
 }

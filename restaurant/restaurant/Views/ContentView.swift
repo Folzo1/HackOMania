@@ -11,10 +11,12 @@ struct ContentView: View {
     var body: some View {
         TabView {
             
-            HomeView()
+            GameView()
                 .tabItem {
                     
-                    Label("Home", systemImage: "house")
+                    Label("Social", systemImage: "gamecontroller")
+                    // use this or use person.2
+                    // name it game or name it social
                     
                 }
             

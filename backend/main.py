@@ -365,4 +365,4 @@ def generate_recipe():
 
 if __name__ == "__main__":
     init_db()
-    app.run(port=8000, debug=True)
+    app.run(host="172.20.10.9", port=8000, debug=True)

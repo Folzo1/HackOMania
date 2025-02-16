@@ -44,7 +44,7 @@ struct ScanResponse: Codable {
 
 class NetworkManager {
     static let shared = NetworkManager()
-    private let baseURL = "http://localhost:8000"
+    private let baseURL = "http://172.20.10.9:8000"
     
     private init() {}
     
