@@ -4,6 +4,8 @@ import SpriteKit
 struct GameView: View {
     @State private var showSavedRecipes = false
     @State private var scene: GameScene
+    @State private var showRecipe1 = false
+    @State private var showRecipe2 = false
     
     init() {
         let scene = GameScene()
@@ -20,6 +22,8 @@ struct GameView: View {
                     .ignoresSafeArea()
                     .onAppear {
                         scene.showSavedRecipes = { showSavedRecipes = true }
+                        scene.showRecipe1 = { showRecipe1 = true }
+                        scene.showRecipe2 = { showRecipe2 = true }
                     }
                 Spacer()
                 Spacer()
@@ -47,6 +51,16 @@ struct GameView: View {
             scene.resetCharacterPosition()
         }) {
             SavedRecipesView()
+        }
+        .sheet(isPresented: $showRecipe1, onDismiss: {
+            scene.resetCharacterPosition()
+        }) {
+            RecipeView1()
+        }
+        .sheet(isPresented: $showRecipe2, onDismiss: {
+            scene.resetCharacterPosition()
+        }) {
+            RecipeView2()
         }
     }
 }

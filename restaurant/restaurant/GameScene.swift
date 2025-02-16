@@ -11,9 +11,18 @@ class GameScene: SKScene {
     var walkAnimationAction: SKAction!
     var isAnimating = false
     
+    var roofType: String = ""
+    var countno: Int = 0
+    var countleft: Int = 0
+    var countright: Int = 0
+    
+    var showSavedRecipes: (() -> Void)? // Callback to SwiftUI
+    var showRecipe1: (() -> Void)? // Callback to SwiftUI
+    var showRecipe2: (() -> Void)? // Callback to SwiftUI
+    
     var targetPosition: CGPoint?
     let characterSpeed: CGFloat = 300.0
-    var showSavedRecipes: (() -> Void)?
+
     private var isNearHouse: Bool = false
 
     override func didMove(to view: SKView) {
@@ -99,37 +108,56 @@ class GameScene: SKScene {
     }
 
     override func update(_ currentTime: TimeInterval) {
-        handleHouseProximity()
-        handleCharacterMovement()
-        controlAnimation()
+        // Check if near any houses
+            if isCharacterNearHouse() == "noroof" && countno % 10 == 0{
+                isNearHouse = true
+                countno += 1
+                showRecipe1?()
+                
+                
+            } else if isCharacterNearHouse() == "leftroof" && countleft % 10 == 0{
+                isNearHouse = true
+                countleft += 1
+                showRecipe2?()
+                
+                
+            } else if isCharacterNearHouse() == "rightroof" && countright % 10 == 0{
+                isNearHouse = true
+                countright += 1
+                showSavedRecipes?()
+                
+                
+            } else {
+                isNearHouse = false
+            }
+
+        
+        if let targetPosition = targetPosition {
+            // Calculate the distance between the character and the target position
+            let offset = CGPoint(x: targetPosition.x - character.position.x,
+                                 y: targetPosition.y - character.position.y)
+            let distance = sqrt(offset.x * offset.x + offset.y * offset.y)
+            
+            // If the target is less than 5 pixels away, move directly to the target
+            if distance <= 5 {
+                character.position = targetPosition
+                self.targetPosition = nil // Clear the target position
+                character.physicsBody?.velocity = CGVector.zero // Stop all movement
+            } else {
+                // Calculate the movement vector
+                let direction = CGPoint(x: offset.x / distance,
+                                        y: offset.y / distance)
+                let velocity = CGPoint(x: direction.x * characterSpeed,
+                                       y: direction.y * characterSpeed)
+                
+                // Apply velocity to the character
+                character.physicsBody?.velocity = CGVector(dx: velocity.x, dy: velocity.y)
+            }
+        }
+        
+        controlAnimation() // check if this is the laggy part
     }
 
-    private func handleHouseProximity() {
-        if isCharacterNearHouse() && !isNearHouse {
-            isNearHouse = true
-            showSavedRecipes?()
-        } else if !isCharacterNearHouse() {
-            isNearHouse = false
-        }
-    }
-
-    private func handleCharacterMovement() {
-        guard let targetPosition = targetPosition else { return }
-        
-        let offset = CGPoint(x: targetPosition.x - character.position.x,
-                           y: targetPosition.y - character.position.y)
-        let distance = sqrt(offset.x * offset.x + offset.y * offset.y)
-        
-        if distance <= 5 {
-            character.position = targetPosition
-            self.targetPosition = nil
-            character.physicsBody?.velocity = .zero
-        } else {
-            let direction = CGPoint(x: offset.x/distance, y: offset.y/distance)
-            let velocity = CGPoint(x: direction.x * characterSpeed, y: direction.y * characterSpeed)
-            character.physicsBody?.velocity = CGVector(dx: velocity.x, dy: velocity.y)
-        }
-    }
 
     private func controlAnimation() {
         guard let velocity = character.physicsBody?.velocity else { return }
@@ -149,13 +177,35 @@ class GameScene: SKScene {
         }
     }
 
-    func isCharacterNearHouse() -> Bool {
-        [housenoroof, houseleftroof, houserightroof].contains { house in
-            guard let house = house else { return false }
-            let dx = house.position.x - character.position.x
-            let dy = house.position.y - character.position.y
-            return (dx * dx + dy * dy) <= 10000 // 100^2
+    func isCharacterNearHouse() -> String {
+        let houses = [housenoroof, houseleftroof, houserightroof]
+        for house in houses {
+            if let house = house {
+                let offset = CGPoint(x: house.position.x - character.position.x,
+                                     y: house.position.y - character.position.y)
+                let distance = sqrt(offset.x * offset.x + offset.y * offset.y)
+                if distance <= 100 { // Adjust this value as needed
+                    if house == housenoroof {
+                        roofType = "noroof"
+                        countno += 1
+                        return roofType
+                    } else if house == houseleftroof {
+                        roofType = "leftroof"
+                        countleft += 1
+                        return roofType
+                        
+                    } else if house == houserightroof {
+                        roofType = "rightroof"
+                        countright += 1
+                        return roofType
+                        
+                        
+                    }
+                }
+                    
+            }
         }
+        return roofType
     }
 
     func resetCharacterPosition() {
@@ -174,17 +224,6 @@ class GameScene: SKScene {
 
 extension GameScene: SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
-        let collision = contact.bodyA.node == character ? contact.bodyB.node : contact.bodyA.node
-        
-        switch collision {
-        case housenoroof:
-            print("No chimney collision")
-        case houseleftroof:
-            print("Left chimney collision")
-        case houserightroof:
-            print("Right chimney collision")
-        default:
-            break
-        }
+        //check stuff
     }
 }
